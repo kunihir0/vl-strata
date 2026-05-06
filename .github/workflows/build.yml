@@ -1,0 +1,68 @@
+name: build
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build packages
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/void-linux/void-glibc-full:20250616R1
+      options: --platform linux/amd64 --privileged
+      volumes:
+        - /dev:/dev
+    
+    steps:
+      - name: Prepare container
+        run: |
+          mkdir -p /etc/xbps.d && cp /usr/share/xbps.d/*-repository-*.conf /etc/xbps.d/
+          xbps-install -Syu xbps && xbps-install -yu && xbps-install -y sudo bash git jq grep
+          useradd -G xbuilder -M builder -s /bin/bash
+
+      - name: Checkout vl-strata
+        uses: actions/checkout@v4
+        with:
+          path: vl-strata
+
+      - name: Checkout void-packages
+        uses: actions/checkout@v4
+        with:
+          repository: void-linux/void-packages
+          path: void-packages
+
+      - name: Inject vl-strata templates
+        run: |
+          echo "=> Injecting custom templates..."
+          cp -rv vl-strata/srcpkgs/* void-packages/srcpkgs/
+          
+          if [ -f "vl-strata/shlibs_append" ]; then
+              echo "=> Appending custom shlibs..."
+              cat vl-strata/shlibs_append >> void-packages/common/shlibs
+          fi
+
+      - name: Setup void-packages environment
+        run: |
+          cd void-packages
+          chown -R builder:builder .
+          sudo -Eu builder ./xbps-src binary-bootstrap
+
+      - name: Build All Packages
+        run: |
+          cd void-packages
+          # Find all injected packages from vl-strata
+          PKGS=$(ls ../vl-strata/srcpkgs/)
+          
+          for pkg in $PKGS; do
+            echo "=> Building $pkg"
+            sudo -Eu builder ./xbps-src pkg "$pkg"
+          done
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xbps-packages
+          path: void-packages/hostdir/binpkgs/*.xbps

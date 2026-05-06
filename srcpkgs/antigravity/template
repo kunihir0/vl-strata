@@ -1,0 +1,28 @@
+# Template file for 'antigravity'
+pkgname=antigravity
+version=1.23.2.4781536860569600
+revision=1
+archs="x86_64"
+depends="libXtst libXcursor libXi libXrender libnotify xdg-utils"
+short_desc="Google's fork of VS Code for Gemini agentic coding"
+maintainer="Your Name <your.email@example.com>"
+license="custom:Proprietary"
+homepage="https://code.google.com/antigravity"
+distfiles="https://edgedl.me.gvt1.com/edgedl/release2/j0qc3/antigravity/stable/1.23.2-4781536860569600/linux-x64/Antigravity.tar.gz"
+checksum=5232a4048ff4fa15685d9a981ba4fba573e297f3efc9b76f638e794baf775725
+wrksrc=Antigravity
+restricted=yes
+nostrip=yes
+
+do_install() {
+	vmkdir opt/antigravity
+	vcopy "*" opt/antigravity
+	vbin ${FILESDIR}/antigravity
+	vlicense LICENSES.chromium.html
+
+	vmkdir usr/share/applications
+	vinstall ${FILESDIR}/antigravity.desktop 644 usr/share/applications
+
+	vmkdir usr/share/pixmaps
+	vinstall resources/app/out/vs/workbench/contrib/antigravityCustomAppIcon/browser/media/antigravity/antigravity.png 644 usr/share/pixmaps
+}
