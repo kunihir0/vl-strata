@@ -1,0 +1,25 @@
+# Template file for 'swiftly'
+pkgname=swiftly
+version=1.1.1
+revision=1
+archs="x86_64"
+short_desc="Official Swift toolchain manager"
+maintainer="kunihir0 <kunihir0@tutanota.com>"
+license="Apache-2.0"
+homepage="https://github.com/swiftlang/swiftly"
+checksum=dc5f94308b33455530f4150b412527596a33c8525a7d59b025b598520e92d121
+nostrip=yes
+
+distfiles="https://download.swift.org/swiftly/linux/swiftly-${version}-x86_64.tar.gz"
+
+do_install() {
+	vbin swiftly
+	vlicense LICENSE.txt
+}
+
+post_install() {
+	for sh in bash fish zsh; do
+		${DESTDIR}/usr/bin/swiftly --generate-completion-script $sh > completion.$sh
+		vcompletion completion.$sh $sh
+	done
+}
