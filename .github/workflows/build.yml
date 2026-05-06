@@ -47,6 +47,7 @@ jobs:
       - name: Setup void-packages environment
         run: |
           cd void-packages
+          echo XBPS_CHROOT_CMD=uchroot >> etc/conf
           chown -R builder:builder .
           sudo -Eu builder ./xbps-src binary-bootstrap
 
